@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VController</title>
+  <link rel="icon" href="VControllerIcon.png" type="image/png" />
+  <style>
+    @font-face {
+      font-family: 'Segoe UI Variable';
+      font-weight: normal;
+      src: local('Segoe UI Variable Text');
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f0f0f;
+      font-family: 'Segoe UI Variable', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    header {
+      width: 100%;
+      background-color: #111;
+      display: flex;
+      align-items: center;
+      padding: 18px 40px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: 40px;
+    }
+
+    .logo img {
+      height: 36px;
+    }
+
+    .logo h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0;
+      color: white;
+    }
+
+    .main-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 80px;
+      padding: 40px;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .content-container {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .image-zoom-container {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      overflow: hidden;
+      flex-shrink: 0;
+      margin-right: 30px;
+    }
+
+    .app-preview {
+      width: 800px;
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      display: block;
+    }
+
+    .image-zoom-container:hover .app-preview {
+      transform: scale(1.1);
+      filter: blur(4px);
+    }
+
+    .zoom-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      user-select: none;
+    }
+
+    .image-zoom-container:hover .zoom-icon {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .button-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 280px;
+    }
+
+    .button-section .title {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: white;
+      margin: 0;
+      user-select: none;
+      text-align: center;
+    }
+
+    .button-section .features {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.5;
+      color: #cccccc;
+      margin: 0 0 10px 0;
+      text-align: left;
+      user-select: none;
+    }
+
+    .button-section .features ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .button-section .features ul li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+    }
+
+    .button-section .features ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 1;
+      top: 0;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .download-btn, .about-btn {
+      padding: 16px 40px;
+      background-color: #0f0f0f;
+      color: white !important;
+      font-size: 18px;
+      font-weight: 600;
+      border: 2px solid white;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      user-select: none;
+      flex: 1 1 auto;
+      text-align: center;
+    }
+
+    .download-btn:hover,
+    .about-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .safe-link {
+      text-decoration: underline;
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      width: 100%;
+    }
+
+    .safe-link:hover {
+      color: #00bfff;
+    }
+
+    /* Modal background blur overlay */
+    #modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 15, 15, 0.75);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 999;
+    }
+    #modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Modal box base styles */
+    .modal {
+      position: fixed;
+      left: 50%;
+      bottom: 50%;
+      width: 80vw;
+      max-width: 500px;
+      background: #222;
+      border-radius: 20px;
+      padding: 30px 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      color: white;
+      font-family: 'Segoe UI Variable', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
+      line-height: 1.5;
+      z-index: 1000;
+      transform: translate(-50%, 150%);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      overflow-y: auto;
+      max-height: 70vh;
+      box-sizing: border-box;
+      white-space: pre-line;
+    }
+    .modal.active {
+      transform: translate(-50%, 50%);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Responsive for modal */
+    @media (max-width: 600px) {
+      .modal {
+        width: 90vw;
+        padding: 20px 25px;
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .main-wrapper {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .content-container {
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .button-row {
+        flex-direction: row;
+        gap: 20px;
+        width: 100%;
+      }
+
+      .button-section {
+        max-width: 100%;
+        gap: 16px;
+      }
+
+      .button-section .features {
+        text-align: center;
+      }
+    }
+
+    /* Scanner links styling */
+    .scanner-links {
+      margin-top: 20px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .scanner-links a {
+      color: #00bfff;
+      text-decoration: underline;
+      display: block;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .scanner-links a:hover {
+      color: #33d6ff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <img src="VControllerIcon.png" alt="VController Logo" />
+      <h1>VController</h1>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+    <div class="content-container">
+      <div class="image-zoom-container">
+        <img src="VControllerAppScreenshot.png" alt="App Preview" class="app-preview" />
+        <img src="Zoom.png" alt="Zoom Icon" class="zoom-icon" id="zoomIcon" />
+      </div>
+
+      <div class="button-section">
+        <h2 class="title">VController</h2>
+        <div class="features">
+          <ul>
+            <li>Supports Windows 10 and 11</li>
+            <li>Completely free to use</li>
+            <li>Accurately emulates mouse movements</li>
+            <li>Open source — available on GitHub</li>
+            <li>Version 1.0 release</li>
+          </ul>
+        </div>
+
+        <div class="button-row">
+          <button class="download-btn" id="download">DOWNLOAD</button>
+          <button class="about-btn" id="about">ABOUT</button>
+        </div>
+        <a href="#safety" class="safe-link" id="safeLink">Is it Safe?</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal and overlay -->
+  <div id="modal-overlay"></div>
+
+  <div id="modal-about" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalAboutTitle" aria-describedby="modalAboutDesc">
+    <h3 id="modalAboutTitle">About VController</h3>
+    <p id="modalAboutDesc">
+⚠️ Disclaimer
+VController is NOT intended to be used for cheating in online multiplayer games. This tool can simulate controller input, and using it in games that offer aim assist to controllers may result in an unfair advantage if you’re using mouse and keyboard. This behavior may be considered cheating or a violation of terms of service in certain games.
+
+🚫 Warning
+Do not use this software to gain unfair advantages in online games. Use at your own risk. You are responsible for how you use this tool. Violating game rules may result in account bans, restrictions, or other consequences from game developers.
+
+💡 Features
+VController simulates a virtual Xbox 360 controller and supports mapping mouse and keyboard inputs to a controller. It features a clean and responsive UI, is lightweight and portable, and is designed for accessibility and custom input needs. While it includes Sticky Aim and Anti-Recoil functionality, it is NOT intended to be used for gaining unfair advantages in video games.
+
+🧠 Usage Responsibility
+VController was created to help users with alternative input needs, testing setups, or accessibility scenarios. Any misuse of this tool falls solely on the user and is not condoned by the developer.
+
+🎉 Enjoy
+
+This application uses ViGEm Bus Driver, developed by Nefarius Software Solutions. Licensed under the MIT License.
+    </p>
+  </div>
+
+  <div id="modal-safe" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalSafeTitle" aria-describedby="modalSafeDesc">
+    <h3 id="modalSafeTitle">Is it Safe?</h3>
+    <p id="modalSafeDesc">
+🔒 Safety and Open Source
+VController is 100% safe, open source, and contains no malicious code. You can inspect, build, and modify the source code yourself. However, being open source does not mean you’re allowed to steal the code and claim it as your own, republish this project under another name, or reupload it to other sites without permission. If you copy, clone, or redistribute this project without credit or permission, consequences may follow, including DMCA takedown requests.
+
+✅ No Account Needed
+VController does not require any sign-up or login process. You can use it freely without creating an account.
+
+📚 License & Legal
+By using VController, you agree not to use the software for illegal or malicious purposes, not to misrepresent the origin of the software, and not to redistribute it without providing appropriate credit.
+
+🧪 Compatibility
+VController currently supports Windows 10/11 and requires the ViGEmBus driver to emulate a virtual Xbox 360 controller. Please ensure you have all dependencies installed for the app to function as intended.
+
+🔒 Privacy
+VController does not collect, store, or transmit any personal data. All processing occurs locally on your machine. Your privacy is fully respected.
+
+🧰 Troubleshooting
+If VController isn’t working as expected, check that all drivers are correctly installed, especially ViGEmBus. Restarting your PC or running the app as administrator can solve common issues.
+
+🔍 <strong>Website Scanners</strong>
+<div class="scanner-links">
+  <a href="https://www.virustotal.com/gui/file/6608b64d66f07cd317f99b8cae2fa2f56e9931a876f1906b012b2f7c0313526b/detection" target="_blank" rel="noopener noreferrer">VirusTotal Scan</a>
+  <a href="https://metadefender.com/results/file/bzI1MDcxMkUxeGdDRXBWT2dLMkdaYjVzcFlh" target="_blank" rel="noopener noreferrer">MetaDefender Scan</a>
+  <a href="https://virusscan.jotti.org/fr-FR/filescanjob/2kqs8gxgzn" target="_blank" rel="noopener noreferrer">Jotti's Malware Scan</a>
+</div>
+    </p>
+  </div>
+
+  <script>
+    // Open screenshot on Zoom icon click
+    document.getElementById('zoomIcon').addEventListener('click', function(event) {
+      event.stopPropagation();
+      window.open('VControllerAppScreenshot.png', '_blank');
+    });
+
+    const aboutBtn = document.getElementById('about');
+    const safeLink = document.getElementById('safeLink');
+    const modalAbout = document.getElementById('modal-about');
+    const modalSafe = document.getElementById('modal-safe');
+    const overlay = document.getElementById('modal-overlay');
+
+    function openModal(modal) {
+      modal.classList.add('active');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      // Remove active classes
+      modalAbout.classList.remove('active');
+      modalSafe.classList.remove('active');
+      overlay.classList.remove('active');
+
+      // Wait for transition end on either modal to restore scroll
+      function onTransitionEnd(e) {
+        if (e.propertyName === 'transform') {
+          document.body.style.overflow = '';
+          modalAbout.removeEventListener('transitionend', onTransitionEnd);
+          modalSafe.removeEventListener('transitionend', onTransitionEnd);
+        }
+      }
+      modalAbout.addEventListener('transitionend', onTransitionEnd);
+      modalSafe.addEventListener('transitionend', onTransitionEnd);
+    }
+
+    aboutBtn.addEventListener('click', () => openModal(modalAbout));
+    safeLink.addEventListener('click', () => openModal(modalSafe));
+    overlay.addEventListener('click', closeModal);
+
+    // Prevent clicks inside modals from closing them
+    modalAbout.addEventListener('click', e => e.stopPropagation());
+    modalSafe.addEventListener('click', e => e.stopPropagation());
+
+    // Open GitHub page on DOWNLOAD button click
+    document.getElementById('download').addEventListener('click', () => {
+      window.open('https://github.com/MrPenguin-0/VController', '_blank');
+    });
+  </script>
+
+</body>
+</html>
